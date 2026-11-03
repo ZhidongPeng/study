@@ -1,4 +1,4 @@
-# Ten Principles for AI-Assisted Engineering Quality
+# Nine Principles for AI-Assisted Software Engineering
 
 **A practical summary with software engineering examples**
 
@@ -6,7 +6,7 @@
 
 The goal is not to make AI generate more code. It is to build an engineering workflow where AI delivers reliable results with less human effort and lower risk.
 
-The ten principles emphasize accurate context, inspection of the current system, independent verification, reusable workflows, objective evidence, clear handoffs, human accountability, curated memory, and outcome-based measurement.
+The nine principles emphasize accurate context, inspection of the current system, reuse and maintenance of proven knowledge, reusable workflows, independent verification, objective evidence, clear handoffs, human accountability, and outcome-based measurement.
 
 ---
 
@@ -44,30 +44,13 @@ The ten principles emphasize accurate context, inspection of the current system,
 
 > **Takeaway:** Understand before changing.
 
-## 3. Verify Independently
+## 3. Reuse and Maintain Proven Knowledge
 
-**Principle:** The agent writing code should not be the only agent deciding whether it is correct.
+**Principle:** Build on established architecture and coding conventions rather than introducing novel solutions without a clear reason. Store only durable, correct, useful, and verifiable knowledge in long-lived AI memory. Justify departures and update guidance when the system changes.
 
-**Why it matters:** A model may overlook the same assumptions or mistakes in both its implementation and its self-review.
+**Scope:** What AI should know and reuse: existing implementations, durable facts, design decisions, and constraints.
 
-**Example — AI-assisted pull requests**
-
-| Role | Responsibility |
-|---|---|
-| AI developer | Implement the change and document decisions |
-| Independent AI reviewer | Inspect the diff against requirements and repository conventions |
-| AI test agent | Design and run validation, including failure paths |
-| Human engineer | Assess consequential risks and approve the change |
-
-For genuine independence, reviewers should examine requirements and the actual diff rather than relying solely on the author's summary.
-
-> **Takeaway:** Separate the creator from the verifier.
-
-## 4. Reuse Established Patterns
-
-**Principle:** Prefer established architecture and coding conventions over novel solutions without a clear reason.
-
-**Why it matters:** Standalone code can appear elegant while creating duplicate abstractions, inconsistent error handling, or maintenance costs.
+**Why it matters:** Ignoring existing patterns creates duplicate abstractions, inconsistent error handling, and maintenance costs. Automatically accumulating every conversation and debugging detail produces stale or contradictory instructions that cause AI to repeat mistakes.
 
 **Example — adding a configuration parameter**
 
@@ -76,11 +59,35 @@ For genuine independence, reviewers should examine requirements and the actual d
 
 **Useful AI instruction:** “Find at least one similar implementation in the repository and explain whether the new change follows it. Justify any departure.”
 
-> **Takeaway:** Consistency is often more valuable than novelty.
+**Example — maintaining repository knowledge**
 
-## 5. Standardize Repeated Work
+After extending the existing configuration manager, preserve any validated, durable configuration rules so future changes reuse the same approach. Keep one-off debugging details out of long-lived AI memory.
 
-**Principle:** Convert recurring tasks and lessons into reusable workflows with clear inputs, checks, and outputs.
+**Keep:** Architectural rules, stable design decisions, coding standards, and known constraints.
+
+**Do not automatically keep:** Temporary logs, one-off hypotheses, outdated implementation notes, and entire chat transcripts.
+
+| Information | Appropriate home |
+|---|---|
+| Coding standards | Versioned repository instructions |
+| Architectural decisions | Design or decision records |
+| Repeated procedures | Reusable agent skills (see principle 4) |
+| Debugging details for one issue | Task-specific context |
+| Historical discussions | Searchable records |
+
+**Practical checklist:**
+- Reuse existing implementations, conventions, and architectural decisions.
+- Preserve only durable, useful, and verifiable lessons in repository instructions or design records.
+- Link to reusable procedures maintained under principle 4 rather than duplicating their steps in knowledge records.
+- Correct or remove stale guidance; keep temporary logs and hypotheses task-specific.
+
+> **Takeaway:** Build on what is proven and keep the supporting knowledge current.
+
+## 4. Make Recurring Work Repeatable
+
+**Principle:** Encode recurring tasks into skills, checklists, scripts, or workflows with defined inputs, steps, checks, and outputs. Turn recurring failures into required checks or regression tests.
+
+**Scope:** How AI should perform recurring tasks consistently. Procedures should use the maintained knowledge from principle 3 rather than duplicate architectural rules or design decisions.
 
 **Why it matters:** Repeating prompts wastes time and leads to inconsistent quality. Recurring AI mistakes should become checks or tests.
 
@@ -98,7 +105,26 @@ For genuine independence, reviewers should examine requirements and the actual d
 
 If reviews repeatedly miss resource leaks, add a required check for cleanup on success, error, timeout, and cancellation paths.
 
-> **Takeaway:** Turn repeated successes and failures into reusable team knowledge.
+> **Takeaway:** Encode recurring work into repeatable, verifiable procedures.
+
+## 5. Verify Independently
+
+**Principle:** The agent writing code should not be the only agent deciding whether it is correct.
+
+**Why it matters:** A model may overlook the same assumptions or mistakes in both its implementation and its self-review.
+
+**Example — AI-assisted pull requests**
+
+| Role | Responsibility |
+|---|---|
+| AI developer | Implement the change and document decisions |
+| Independent AI reviewer | Inspect the diff against requirements and repository conventions |
+| AI test agent | Design and run validation, including failure paths |
+| Human engineer | Assess consequential risks and approve the change |
+
+For genuine independence, reviewers should examine requirements and the actual diff rather than relying solely on the author's summary.
+
+> **Takeaway:** Separate the creator from the verifier.
 
 ## 6. Require Verifiable Evidence
 
@@ -160,29 +186,7 @@ AI prepares the deployment, validates configuration, runs checks, summarizes ris
 
 > **Takeaway:** Automate preparation and execution where safe; retain human accountability at consequential gates.
 
-## 9. Curate Durable Knowledge
-
-**Principle:** Store only durable, correct, useful, and verifiable knowledge in long-lived AI memory.
-
-**Why it matters:** Automatically accumulating every conversation and debugging detail produces stale or contradictory instructions.
-
-**Example — repository knowledge**
-
-**Keep:** Architectural rules, stable design decisions, coding standards, known constraints, and validated workflows.
-
-**Do not automatically keep:** Temporary logs, one-off hypotheses, outdated implementation notes, and entire chat transcripts.
-
-| Information | Appropriate home |
-|---|---|
-| Coding standards | Versioned repository instructions |
-| Architectural decisions | Design or decision records |
-| Repeated procedures | Reusable agent skills |
-| Debugging details for one issue | Task-specific context |
-| Historical discussions | Searchable records |
-
-> **Takeaway:** Curate AI memory like a maintained engineering asset.
-
-## 10. Measure Engineering Outcomes
+## 9. Measure Engineering Outcomes
 
 **Principle:** Judge AI by improvements in delivered engineering outcomes, not by prompts, tokens, or generated lines.
 
@@ -213,10 +217,10 @@ AI prepares the deployment, validates configuration, runs checks, summarizes ris
 
 | Discipline | Principles | Objective |
 |---|---|---|
-| Context and understanding | 1, 2, 4 | Work on the right problem using the current architecture |
-| Execution and verification | 3, 6, 8 | Validate independently and preserve approval controls |
-| Workflow standardization | 5, 7, 9 | Make good workflows repeatable and maintainable |
-| Outcome measurement | 10 | Demonstrate real productivity and quality improvements |
+| Context and understanding | 1, 2, 3 | Work on the right problem using the current architecture |
+| Execution and verification | 5, 6, 8 | Validate independently and preserve approval controls |
+| Workflow standardization | 4, 7 | Make good workflows repeatable and maintainable |
+| Outcome measurement | 9 | Demonstrate real productivity and quality improvements |
 
 ## Example: An AI-Native PR Workflow
 
@@ -228,16 +232,6 @@ AI prepares the deployment, validates configuration, runs checks, summarizes ris
 6. **Improve:** Turn recurring defects into checks and measure outcomes.
 
 **Loop:** Understand → Implement → Verify → Review → Deliver → Learn.
-
-## Recommended Priorities for an AI PR Guardian
-
-| Priority | Principle | Value |
-|---|---|---|
-| 1 | **#3 — Verify Independently** | Independent review instead of self-certification |
-| 2 | **#6 — Require Verifiable Evidence** | Findings can be checked and acted on |
-| 3 | **#5 — Standardize Repeated Work** | Consistent review quality across PRs |
-| 4 | **#7 — Clarify Every Handoff** | Less human effort reconstructing changes |
-| 5 | **#10 — Measure Engineering Outcomes** | Proof of productivity gains without hidden quality costs |
 
 ### Suggested Review-Ready Evidence Package
 
@@ -255,7 +249,3 @@ This allows reviewers to focus attention on meaningful risks rather than reconst
 ## Final Takeaway
 
 > **AI should not simply accelerate code generation. It should accelerate delivery of reliable software by reducing total human effort, automating repeatable work, and providing verifiable evidence of quality.**
-
----
-
-*Based on the linked OCM article; practical examples, tables, and AI PR Guardian recommendations were added for general engineering use.*
