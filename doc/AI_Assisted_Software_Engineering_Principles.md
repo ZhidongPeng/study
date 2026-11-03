@@ -8,6 +8,8 @@ The goal is not to make AI generate more code. It is to build an engineering wor
 
 The nine principles emphasize accurate context, inspection of the current system, reuse and maintenance of proven knowledge, reusable workflows, independent verification, objective evidence, clear handoffs, human accountability, and outcome-based measurement.
 
+**Repository examples:** The examples below reference [Azure/GuestProxyAgent at commit `9a27720`](https://github.com/Azure/GuestProxyAgent/tree/9a27720438a282876a40e36ca8bd1f25e28a135f), inspected on November 3, 2026. They distinguish implementation from configured workflows and documented expectations. The repository's AI engineering guides are owner-review-pending drafts, not proof of deployed automation, executed validation, or measured productivity gains.
+
 ---
 
 ## 1. Provide Relevant Context
@@ -27,6 +29,10 @@ The nine principles emphasize accurate context, inspection of the current system
 - State expected behavior and constraints.
 - Exclude unrelated modules and obsolete documentation.
 
+**GuestProxyAgent example — select context by change surface**
+
+The [engineering context index](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.ai/README.md) maps topics to when they are relevant, while the [context registry](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.ai/context.json) links each topic to source evidence. For an authorization change, supply the relevant security and compatibility guidance plus the affected authorizer and tests, rather than loading every design plan and deployment script. The registry is navigation data, not an automatic retriever.
+
 > **Takeaway:** Relevant context beats maximum context.
 
 ## 2. Inspect Before Changing
@@ -41,6 +47,10 @@ The nine principles emphasize accurate context, inspection of the current system
 - **Better request:** “Inspect the existing HTTP client, retry policy, configuration, tests, and recent changes. Determine whether retry support already exists, then propose the smallest compatible change.”
 
 **Workflow:** Inspect code → verify current behavior → find existing abstractions → propose a change → implement and test.
+
+**GuestProxyAgent example — inspect signing exceptions before refactoring HTTP code**
+
+The shared HTTP client's [signature-skip implementation and tests](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/proxy_agent_shared/src/hyper_client.rs) deliberately exempt `PUT /vmAgentLog` and `POST /machine/?comp=telemetrydata`. Its `should_skip_sig_test` also asserts that `GET` requests to those paths are not exempt. Before simplifying signing logic, inspect both the rationale and these method-specific assertions; do not assume every unsigned request is an accidental omission. These are inspected source contracts, not a claim that the tests were run for this document.
 
 > **Takeaway:** Understand before changing.
 
@@ -81,6 +91,10 @@ After extending the existing configuration manager, preserve any validated, dura
 - Link to reusable procedures maintained under principle 4 rather than duplicating their steps in knowledge records.
 - Correct or remove stale guidance; keep temporary logs and hypotheses task-specific.
 
+**GuestProxyAgent example — reuse configuration code and maintain its evidence**
+
+The existing [configuration module](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/proxy_agent/src/common/config.rs) centralizes configuration loading, platform-specific filenames, environment-variable resolution, and accessors. Extend that mechanism instead of introducing a second parser. For durable guidance, the [context maintenance contract](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.ai/README.md#maintenance) calls for updating affected guides and source links with behavior changes, recording evidence revisions, and returning changed contracts to draft status for review. This preserves current knowledge rather than merely accumulating notes.
+
 > **Takeaway:** Build on what is proven and keep the supporting knowledge current.
 
 ## 4. Make Recurring Work Repeatable
@@ -105,6 +119,10 @@ After extending the existing configuration manager, preserve any validated, dura
 
 If reviews repeatedly miss resource leaks, add a required check for cleanup on success, error, timeout, and cancellation paths.
 
+**GuestProxyAgent example — encode PR preparation as a reusable procedure**
+
+The checked-in [`/gpa-pr` prompt](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.github/prompts/gpa-pr.prompt.md) defines a repeatable sequence: refresh the comparison branch, establish task scope, fill the canonical proof package, run appropriate validation, request independent review, and return a PR title and description. It stops on comparison-base failures rather than silently using stale evidence. This is a configured local procedure, not evidence that it ran or an authorization to commit, push, or publish.
+
 > **Takeaway:** Encode recurring work into repeatable, verifiable procedures.
 
 ## 5. Verify Independently
@@ -123,6 +141,10 @@ If reviews repeatedly miss resource leaks, add a required check for cleanup on s
 | Human engineer | Assess consequential risks and approve the change |
 
 For genuine independence, reviewers should examine requirements and the actual diff rather than relying solely on the author's summary.
+
+**GuestProxyAgent example — separate implementation, assessment, and test design**
+
+The [agent workflow](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.ai/agent-workflow.md) assigns implementation and deterministic validation to GPA Coding, with independent assessment by a separate read-only GPA Guardian. The [GPA Tests reviewer](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.github/agents/gpa-tests.agent.md) inspects assertions and designs adversarial cases without editing or executing tests; the coding agent owns execution. This separates judgment from authorship without pretending that independent review proves correctness or that unavailable review occurred.
 
 > **Takeaway:** Separate the creator from the verifier.
 
@@ -146,6 +168,10 @@ Ask for the root cause, synchronization change, regression test, actual test out
 
 No single test proves universal correctness.
 
+**GuestProxyAgent example — validate heap-growth evidence before claiming a leak**
+
+The [UMDH analysis guide](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/doc/UMDHMemoryLeakAnalysis.md) requires matching symbols, verification of stack collection in the running process, and comparable before/after snapshots from the same PID. It rejects a baseline containing only `BackTrace0` and explains that a positive allocation delta alone does not prove a leak. For an AI-proposed fix, request repeated comparable measurements and source-correlated allocation stacks, not just a lower one-off memory reading. UMDH evidence concerns Windows heap allocations, not all process-memory growth.
+
 > **Takeaway:** Trust inspectable evidence, not AI confidence.
 
 ## 7. Clarify Every Handoff
@@ -163,6 +189,10 @@ No single test proves universal correctness.
 - **Reviewer focus:** Retry amplification, cancellation, and cleanup.
 
 **Reusable handoff template:** Completed / Decisions / Evidence / Risks / Next steps.
+
+**GuestProxyAgent example — hand over a structured author proof package**
+
+The [proof-package contract](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.ai/proof-package.md) requires eight sections: Intent, Implementation, Behavior change, Risk, Invariants, Validation, Reviewer attention, and Uncertainty. Its validation rules tie acceptance criteria to implementation and meaningful checks, record the assessed snapshot and platform, and preserve failed, missing, or stale evidence. An author-to-Guardian handoff therefore carries both the change's rationale and its unresolved gaps; the Guardian's assessment remains separate evidence rather than an author-filled approval.
 
 > **Takeaway:** A good handoff makes the next participant immediately productive.
 
@@ -183,6 +213,10 @@ AI prepares the deployment, validates configuration, runs checks, summarizes ris
 | Merge a PR | Human approval |
 | Deploy to production | Human approval |
 | Modify security-sensitive configuration | Human approval |
+
+**GuestProxyAgent example — require explicit review before relaxing a size budget**
+
+The [binary-size budget override procedure](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/ci/README.md#override-path) asks for the measured report, a narrowly scoped budget change with matching documentation, and two reviewer approvals specifically acknowledging the change. The [bloat workflow](https://github.com/Azure/GuestProxyAgent/blob/9a27720438a282876a40e36ca8bd1f25e28a135f/.github/workflows/bloat.yml) supplies the configured target/binary ceilings and crate-share exceptions. AI can diagnose growth and prepare the proposed adjustment; it should not silently raise thresholds to make a check green. The approval requirement is documented policy, not proof that branch protection enforces it.
 
 > **Takeaway:** Automate preparation and execution where safe; retain human accountability at consequential gates.
 
